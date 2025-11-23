@@ -1,4 +1,20 @@
-FROM ubuntu:latest
-LABEL authors="varya"
+FROM golang:1.25 AS builder
 
-ENTRYPOINT ["top", "-b"]
+WORKDIR /app
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+RUN go build -o server ./cmd/app
+
+FROM debian:stable-slim
+
+WORKDIR /app
+
+COPY --from=builder /app/server .
+
+EXPOSE 8080
+
+CMD ["./server"]
